@@ -1,0 +1,638 @@
+<html><head><meta charset="UTF-8"><link rel="import" href="my-app.html"></head><body><div hidden="" by-vulcanize=""><script>!function(){"use strict";Polymer.IronJsonpLibraryBehavior={properties:{libraryLoaded:{type:Boolean,value:!1,notify:!0,readOnly:!0},libraryErrorMessage:{type:String,value:null,notify:!0,readOnly:!0}},observers:["_libraryUrlChanged(libraryUrl)"],_libraryUrlChanged:function(r){this._isReady&&this.libraryUrl&&this._loadLibrary()},_libraryLoadCallback:function(r,i){r?(console.warn("Library load failed:",r.message),this._setLibraryErrorMessage(r.message)):(this._setLibraryErrorMessage(null),this._setLibraryLoaded(!0),this.notifyEvent&&this.fire(this.notifyEvent,i))},_loadLibrary:function(){r.require(this.libraryUrl,this._libraryLoadCallback.bind(this),this.callbackName)},ready:function(){this._isReady=!0,this.libraryUrl&&this._loadLibrary()}};var r={apiMap:{},require:function(r,t,e){var a=this.nameFromUrl(r);this.apiMap[a]||(this.apiMap[a]=new i(a,r,e)),this.apiMap[a].requestNotify(t)},nameFromUrl:function(r){return r.replace(/[\:\/\%\?\&\.\=\-\,]/g,"_")+"_api"}},i=function(r,i,t){if(this.notifiers=[],!t){if(!(i.indexOf(this.callbackMacro)>=0))return void(this.error=new Error("IronJsonpLibraryBehavior a %%callback%% parameter is required in libraryUrl"));t=r+"_loaded",i=i.replace(this.callbackMacro,t)}this.callbackName=t,window[this.callbackName]=this.success.bind(this),this.addScript(i)};i.prototype={callbackMacro:"%%callback%%",loaded:!1,addScript:function(r){var i=document.createElement("script");i.src=r,i.onerror=this.handleError.bind(this);var t=document.querySelector("script")||document.body;t.parentNode.insertBefore(i,t),this.script=i},removeScript:function(){this.script.parentNode&&this.script.parentNode.removeChild(this.script),this.script=null},handleError:function(r){this.error=new Error("Library failed to load"),this.notifyAll(),this.cleanup()},success:function(){this.loaded=!0,this.result=Array.prototype.slice.call(arguments),this.notifyAll(),this.cleanup()},cleanup:function(){delete window[this.callbackName]},notifyAll:function(){this.notifiers.forEach(function(r){r(this.error,this.result)}.bind(this)),this.notifiers=[]},requestNotify:function(r){this.loaded||this.error?r(this.error,this.result):this.notifiers.push(r)}}}();</script>
+
+
+<script>Polymer({is:"iron-jsonp-library",behaviors:[Polymer.IronJsonpLibraryBehavior],properties:{libraryUrl:String,callbackName:String,notifyEvent:String}});</script>
+<script>Polymer({is:"google-js-api",behaviors:[Polymer.IronJsonpLibraryBehavior],properties:{libraryUrl:{type:String,value:"https://apis.google.com/js/api.js?onload=%%callback%%"},notifyEvent:{type:String,value:"js-api-load"}},get api(){return gapi}});</script>
+<script>!function(){var e={appPackageName:"apppackagename",clientId:"clientid",cookiePolicy:"cookiepolicy",hostedDomain:"hostedDomain",openidPrompt:"prompt",requestVisibleActions:"requestvisibleactions"},t={_clientId:null,get clientId(){return this._clientId},set clientId(e){if(this._clientId&&e&&e!=this._clientId)throw new Error("clientId cannot change. Values do not match. New: "+e+" Old:"+this._clientId);e&&e!=this._clientId&&(this._clientId=e,this.initAuth2())},_cookiePolicy:"single_host_origin",get cookiePolicy(){return this._cookiePolicy},set cookiePolicy(e){e&&(this._cookiePolicy=e)},_appPackageName:"",get appPackageName(){return this._appPackageName},set appPackageName(e){if(this._appPackageName&&e&&e!=this._appPackageName)throw new Error("appPackageName cannot change. Values do not match. New: "+e+" Old: "+this._appPackageName);e&&(this._appPackageName=e)},_requestVisibleActions:"",get requestVisibleactions(){return this._requestVisibleActions},set requestVisibleactions(e){if(this._requestVisibleActions&&e&&e!=this._requestVisibleActions)throw new Error("requestVisibleactions cannot change. Values do not match. New: "+e+" Old: "+this._requestVisibleActions);e&&(this._requestVisibleActions=e)},_hostedDomain:"",get hostedDomain(){return this._hostedDomain},set hostedDomain(e){if(this._hostedDomain&&e&&e!=this._hostedDomain)throw new Error("hostedDomain cannot change. Values do not match. New: "+e+" Old: "+this._hostedDomain);e&&(this._hostedDomain=e)},_openidPrompt:"",get openidPrompt(){return this._openidPrompt},set openidPrompt(e){if("string"!=typeof e)throw new Error("openidPrompt must be a string. Received "+typeof e);if(e){var t=e.split(" ");t=t.map(function(e){return e.trim()}),t=t.filter(function(e){return e});var i={none:0,login:0,consent:0,select_account:0};t.forEach(function(e){if("none"==e&&t.length>1)throw new Error("none cannot be combined with other openidPrompt values");if(!(e in i))throw new Error("invalid openidPrompt value "+e+". Valid values: "+Object.keys(i).join(", "))})}this._openidPrompt=e},_offline:!1,get offline(){return this._offline},set offline(e){this._offline=e,this.updateAdditionalAuth()},_offlineAlwaysPrompt:!1,get offlineAlwaysPrompt(){return this._offlineAlwaysPrompt},set offlineAlwaysPrompt(e){this._offlineAlwaysPrompt=e,this.updateAdditionalAuth()},offlineGranted:!1,_apiLoader:null,_requestedScopeArray:[],get requestedScopes(){return this._requestedScopeArray.join(" ")},_signedIn:!1,_grantedScopeArray:[],_needAdditionalAuth:!0,_hasPlusScopes:!1,signinAwares:[],init:function(){this._apiLoader=document.createElement("google-js-api"),this._apiLoader.addEventListener("js-api-load",this.loadAuth2.bind(this))},loadAuth2:function(){gapi.load("auth2",this.initAuth2.bind(this))},initAuth2:function(){if("gapi"in window&&"auth2"in window.gapi&&this.clientId){var e=gapi.auth2.init({client_id:this.clientId,cookie_policy:this.cookiePolicy,scope:this.requestedScopes,hosted_domain:this.hostedDomain});e.currentUser.listen(this.handleUserUpdate.bind(this)),e.then(function(){},function(e){console.error(e)})}},handleUserUpdate:function(e){var t=e.isSignedIn();if(t!=this._signedIn){this._signedIn=t;for(var i=0;i<this.signinAwares.length;i++)this.signinAwares[i]._setSignedIn(t)}this._grantedScopeArray=this.strToScopeArray(e.getGrantedScopes()),this.updateAdditionalAuth();for(var n=e.getAuthResponse(),i=0;i<this.signinAwares.length;i++)this.signinAwares[i]._updateScopeStatus(n)},setOfflineCode:function(e){for(var t=0;t<this.signinAwares.length;t++)this.signinAwares[t]._updateOfflineCode(e)},strToScopeArray:function(e){if(!e)return[];for(var t=e.replace(/\ +/g," ").trim().split(" "),i=0;i<t.length;i++)t[i]=t[i].toLowerCase(),"https://www.googleapis.com/auth/userinfo.profile"===t[i]&&(t[i]="profile"),"https://www.googleapis.com/auth/userinfo.email"===t[i]&&(t[i]="email");return t.filter(function(e,t,i){return i.indexOf(e)===t})},isPlusScope:function(e){return e.indexOf("/auth/games")>-1||e.indexOf("auth/plus.")>-1&&e.indexOf("auth/plus.me")<0},hasGrantedScopes:function(e){for(var t=this.strToScopeArray(e),i=0;i<t.length;i++)if(this._grantedScopeArray.indexOf(t[i])===-1)return!1;return!0},requestScopes:function(e){for(var t=this.strToScopeArray(e),i=!1,n=0;n<t.length;n++)this._requestedScopeArray.indexOf(t[n])===-1&&(this._requestedScopeArray.push(t[n]),i=!0);i&&(this.updateAdditionalAuth(),this.updatePlusScopes())},updateAdditionalAuth:function(){var e=!1;if(!this.offlineAlwaysPrompt&&!this.offline||this.offlineGranted){for(var t=0;t<this._requestedScopeArray.length;t++)if(this._grantedScopeArray.indexOf(this._requestedScopeArray[t])===-1){e=!0;break}}else e=!0;if(this._needAdditionalAuth!=e){this._needAdditionalAuth=e;for(var t=0;t<this.signinAwares.length;t++)this.signinAwares[t]._setNeedAdditionalAuth(e)}},updatePlusScopes:function(){for(var e=!1,t=0;t<this._requestedScopeArray.length;t++)if(this.isPlusScope(this._requestedScopeArray[t])){e=!0;break}if(this._hasPlusScopes!=e){this._hasPlusScopes=e;for(var t=0;t<this.signinAwares.length;t++)this.signinAwares[t]._setHasPlusScopes(e)}},attachSigninAware:function(e){this.signinAwares.indexOf(e)==-1?(this.signinAwares.push(e),e._setNeedAdditionalAuth(this._needAdditionalAuth),e._setSignedIn(this._signedIn),e._setHasPlusScopes(this._hasPlusScopes)):console.warn("signinAware attached more than once",e)},detachSigninAware:function(e){var t=this.signinAwares.indexOf(e);t!=-1?this.signinAwares.splice(t,1):console.warn("Trying to detach unattached signin-aware")},getMissingScopes:function(){return this._requestedScopeArray.filter(function(e){return this._grantedScopeArray.indexOf(e)===-1}.bind(this)).join(" ")},assertAuthInitialized:function(){if(!this.clientId)throw new Error("AuthEngine not initialized. clientId has not been configured.");if(!("gapi"in window))throw new Error("AuthEngine not initialized. gapi has not loaded.");if(!("auth2"in window.gapi))throw new Error("AuthEngine not initialized. auth2 not loaded.")},signIn:function(){this.assertAuthInitialized();var i={scope:this.getMissingScopes()};Object.keys(e).forEach(function(t){this[t]&&""!==this[t]&&(i[e[t]]=this[t])},this);var n,o=gapi.auth2.getAuthInstance().currentUser.get();this.offline||this.offlineAlwaysPrompt?(i.redirect_uri="postmessage",this.offlineAlwaysPrompt&&(i.approval_prompt="force"),n=gapi.auth2.getAuthInstance().grantOfflineAccess(i)):n=o.getGrantedScopes()?o.grant(i):gapi.auth2.getAuthInstance().signIn(i),n.then(function(e){var i;e.code?(t.offlineGranted=!0,i=gapi.auth2.getAuthInstance().currentUser.get(),t.setOfflineCode(e.code)):i=e;i.getAuthResponse()},function(e){"Access denied."!==e.reason&&this.signinAwares.forEach(function(t){t.errorNotify(e)})}.bind(this))},signOut:function(){this.assertAuthInitialized(),gapi.auth2.getAuthInstance().signOut().then(function(){},function(e){console.error(e)})}};t.init(),Polymer({is:"google-signin-aware",properties:{appPackageName:{type:String,observer:"_appPackageNameChanged"},clientId:{type:String,observer:"_clientIdChanged"},cookiePolicy:{type:String,observer:"_cookiePolicyChanged"},requestVisibleActions:{type:String,observer:"_requestVisibleActionsChanged"},hostedDomain:{type:String,observer:"_hostedDomainChanged"},offline:{type:Boolean,value:!1,observer:"_offlineChanged"},offlineAlwaysPrompt:{type:Boolean,value:!1,observer:"_offlineAlwaysPromptChanged"},scopes:{type:String,value:"profile",observer:"_scopesChanged"},openidPrompt:{type:String,value:"",observer:"_openidPromptChanged"},signedIn:{type:Boolean,notify:!0,readOnly:!0},isAuthorized:{type:Boolean,notify:!0,readOnly:!0,value:!1},needAdditionalAuth:{type:Boolean,notify:!0,readOnly:!0},hasPlusScopes:{type:Boolean,value:!1,notify:!0,readOnly:!0}},attached:function(){t.attachSigninAware(this)},detached:function(){t.detachSigninAware(this)},signIn:function(){t.signIn()},signOut:function(){t.signOut()},errorNotify:function(e){this.fire("google-signin-aware-error",e)},_appPackageNameChanged:function(e,i){t.appPackageName=e},_clientIdChanged:function(e,i){t.clientId=e},_cookiePolicyChanged:function(e,i){t.cookiePolicy=e},_requestVisibleActionsChanged:function(e,i){t.requestVisibleActions=e},_hostedDomainChanged:function(e,i){t.hostedDomain=e},_offlineChanged:function(e,i){t.offline=e},_offlineAlwaysPromptChanged:function(e,i){t.offlineAlwaysPrompt=e},_scopesChanged:function(e,i){t.requestScopes(e),this._updateScopeStatus(void 0)},_openidPromptChanged:function(e,i){t.openidPrompt=e},_updateScopeStatus:function(e){var i=this.signedIn&&t.hasGrantedScopes(this.scopes);i!==this.isAuthorized&&(this._setIsAuthorized(i),i?this.fire("google-signin-aware-success",e):this.fire("google-signin-aware-signed-out",e))},_updateOfflineCode:function(e){e&&this.fire("google-signin-offline-success",{code:e})}})}();</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic,500,500italic,700,700italic">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto+Mono:400,700">
+<style is="custom-style">
+
+  :root {
+
+    --shadow-transition: {
+      transition: box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    };
+
+    --shadow-none: {
+      box-shadow: none;
+    };
+
+    /* from http://codepen.io/shyndman/pen/c5394ddf2e8b2a5c9185904b57421cdb */
+
+    --shadow-elevation-2dp: {
+      box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14),
+                  0 1px 5px 0 rgba(0, 0, 0, 0.12),
+                  0 3px 1px -2px rgba(0, 0, 0, 0.2);
+    };
+
+    --shadow-elevation-3dp: {
+      box-shadow: 0 3px 4px 0 rgba(0, 0, 0, 0.14),
+                  0 1px 8px 0 rgba(0, 0, 0, 0.12),
+                  0 3px 3px -2px rgba(0, 0, 0, 0.4);
+    };
+
+    --shadow-elevation-4dp: {
+      box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14),
+                  0 1px 10px 0 rgba(0, 0, 0, 0.12),
+                  0 2px 4px -1px rgba(0, 0, 0, 0.4);
+    };
+
+    --shadow-elevation-6dp: {
+      box-shadow: 0 6px 10px 0 rgba(0, 0, 0, 0.14),
+                  0 1px 18px 0 rgba(0, 0, 0, 0.12),
+                  0 3px 5px -1px rgba(0, 0, 0, 0.4);
+    };
+
+    --shadow-elevation-8dp: {
+      box-shadow: 0 8px 10px 1px rgba(0, 0, 0, 0.14),
+                  0 3px 14px 2px rgba(0, 0, 0, 0.12),
+                  0 5px 5px -3px rgba(0, 0, 0, 0.4);
+    };
+
+    --shadow-elevation-12dp: {
+      box-shadow: 0 12px 16px 1px rgba(0, 0, 0, 0.14),
+                  0 4px 22px 3px rgba(0, 0, 0, 0.12),
+                  0 6px 7px -4px rgba(0, 0, 0, 0.4);
+    };
+
+    --shadow-elevation-16dp: {
+      box-shadow: 0 16px 24px 2px rgba(0, 0, 0, 0.14),
+                  0  6px 30px 5px rgba(0, 0, 0, 0.12),
+                  0  8px 10px -5px rgba(0, 0, 0, 0.4);
+    };
+
+  }
+
+</style>
+<dom-module id="paper-material-shared-styles" assetpath="../bower_components/paper-material/">
+  <template>
+    <style>
+      :host {
+        display: block;
+        position: relative;
+      }
+
+      :host([elevation="1"]) {
+        @apply(--shadow-elevation-2dp);
+      }
+
+      :host([elevation="2"]) {
+        @apply(--shadow-elevation-4dp);
+      }
+
+      :host([elevation="3"]) {
+        @apply(--shadow-elevation-6dp);
+      }
+
+      :host([elevation="4"]) {
+        @apply(--shadow-elevation-8dp);
+      }
+
+      :host([elevation="5"]) {
+        @apply(--shadow-elevation-16dp);
+      }
+    </style>
+  </template>
+</dom-module>
+<dom-module id="paper-material" assetpath="../bower_components/paper-material/">
+  <template>
+    <style include="paper-material-shared-styles"></style>
+    <style>
+      :host([animated]) {
+        @apply(--shadow-transition);
+      }
+    </style>
+
+    <content></content>
+  </template>
+</dom-module>
+<script>Polymer({is:"paper-material",properties:{elevation:{type:Number,reflectToAttribute:!0,value:1},animated:{type:Boolean,reflectToAttribute:!0,value:!1}}});</script>
+<dom-module id="iron-flex" assetpath="../bower_components/iron-flex-layout/">
+  <template>
+    <style>
+      .layout.horizontal,
+      .layout.vertical {
+        display: -ms-flexbox;
+        display: -webkit-flex;
+        display: flex;
+      }
+
+      .layout.inline {
+        display: -ms-inline-flexbox;
+        display: -webkit-inline-flex;
+        display: inline-flex;
+      }
+
+      .layout.horizontal {
+        -ms-flex-direction: row;
+        -webkit-flex-direction: row;
+        flex-direction: row;
+      }
+
+      .layout.vertical {
+        -ms-flex-direction: column;
+        -webkit-flex-direction: column;
+        flex-direction: column;
+      }
+
+      .layout.wrap {
+        -ms-flex-wrap: wrap;
+        -webkit-flex-wrap: wrap;
+        flex-wrap: wrap;
+      }
+
+      .layout.center,
+      .layout.center-center {
+        -ms-flex-align: center;
+        -webkit-align-items: center;
+        align-items: center;
+      }
+
+      .layout.center-justified,
+      .layout.center-center {
+        -ms-flex-pack: center;
+        -webkit-justify-content: center;
+        justify-content: center;
+      }
+
+      .flex {
+        -ms-flex: 1 1 0.000000001px;
+        -webkit-flex: 1;
+        flex: 1;
+        -webkit-flex-basis: 0.000000001px;
+        flex-basis: 0.000000001px;
+      }
+
+      .flex-auto {
+        -ms-flex: 1 1 auto;
+        -webkit-flex: 1 1 auto;
+        flex: 1 1 auto;
+      }
+
+      .flex-none {
+        -ms-flex: none;
+        -webkit-flex: none;
+        flex: none;
+      }
+    </style>
+  </template>
+</dom-module>
+
+
+<dom-module id="iron-flex-reverse" assetpath="../bower_components/iron-flex-layout/">
+  <template>
+    <style>
+      .layout.horizontal-reverse,
+      .layout.vertical-reverse {
+        display: -ms-flexbox;
+        display: -webkit-flex;
+        display: flex;
+      }
+
+      .layout.horizontal-reverse {
+        -ms-flex-direction: row-reverse;
+        -webkit-flex-direction: row-reverse;
+        flex-direction: row-reverse;
+      }
+
+      .layout.vertical-reverse {
+        -ms-flex-direction: column-reverse;
+        -webkit-flex-direction: column-reverse;
+        flex-direction: column-reverse;
+      }
+
+      .layout.wrap-reverse {
+        -ms-flex-wrap: wrap-reverse;
+        -webkit-flex-wrap: wrap-reverse;
+        flex-wrap: wrap-reverse;
+      }
+    </style>
+  </template>
+</dom-module>
+
+
+<dom-module id="iron-flex-alignment" assetpath="../bower_components/iron-flex-layout/">
+  <template>
+    <style>
+      /**
+       * Alignment in cross axis.
+       */
+      .layout.start {
+        -ms-flex-align: start;
+        -webkit-align-items: flex-start;
+        align-items: flex-start;
+      }
+
+      .layout.center,
+      .layout.center-center {
+        -ms-flex-align: center;
+        -webkit-align-items: center;
+        align-items: center;
+      }
+
+      .layout.end {
+        -ms-flex-align: end;
+        -webkit-align-items: flex-end;
+        align-items: flex-end;
+      }
+
+      .layout.baseline {
+        -ms-flex-align: baseline;
+        -webkit-align-items: baseline;
+        align-items: baseline;
+      }
+
+      /**
+       * Alignment in main axis.
+       */
+      .layout.start-justified {
+        -ms-flex-pack: start;
+        -webkit-justify-content: flex-start;
+        justify-content: flex-start;
+      }
+
+      .layout.center-justified,
+      .layout.center-center {
+        -ms-flex-pack: center;
+        -webkit-justify-content: center;
+        justify-content: center;
+      }
+
+      .layout.end-justified {
+        -ms-flex-pack: end;
+        -webkit-justify-content: flex-end;
+        justify-content: flex-end;
+      }
+
+      .layout.around-justified {
+        -ms-flex-pack: distribute;
+        -webkit-justify-content: space-around;
+        justify-content: space-around;
+      }
+
+      .layout.justified {
+        -ms-flex-pack: justify;
+        -webkit-justify-content: space-between;
+        justify-content: space-between;
+      }
+
+      /**
+       * Self alignment.
+       */
+      .self-start {
+        -ms-align-self: flex-start;
+        -webkit-align-self: flex-start;
+        align-self: flex-start;
+      }
+
+      .self-center {
+        -ms-align-self: center;
+        -webkit-align-self: center;
+        align-self: center;
+      }
+
+      .self-end {
+        -ms-align-self: flex-end;
+        -webkit-align-self: flex-end;
+        align-self: flex-end;
+      }
+
+      .self-stretch {
+        -ms-align-self: stretch;
+        -webkit-align-self: stretch;
+        align-self: stretch;
+      }
+
+      .self-baseline {
+        -ms-align-self: baseline;
+        -webkit-align-self: baseline;
+        align-self: baseline;
+      };
+
+      /**
+       * multi-line alignment in main axis.
+       */
+      .layout.start-aligned {
+        -ms-flex-line-pack: start;  /* IE10 */
+        -ms-align-content: flex-start;
+        -webkit-align-content: flex-start;
+        align-content: flex-start;
+      }
+
+      .layout.end-aligned {
+        -ms-flex-line-pack: end;  /* IE10 */
+        -ms-align-content: flex-end;
+        -webkit-align-content: flex-end;
+        align-content: flex-end;
+      }
+
+      .layout.center-aligned {
+        -ms-flex-line-pack: center;  /* IE10 */
+        -ms-align-content: center;
+        -webkit-align-content: center;
+        align-content: center;
+      }
+
+      .layout.between-aligned {
+        -ms-flex-line-pack: justify;  /* IE10 */
+        -ms-align-content: space-between;
+        -webkit-align-content: space-between;
+        align-content: space-between;
+      }
+
+      .layout.around-aligned {
+        -ms-flex-line-pack: distribute;  /* IE10 */
+        -ms-align-content: space-around;
+        -webkit-align-content: space-around;
+        align-content: space-around;
+      }
+    </style>
+  </template>
+</dom-module>
+
+<dom-module id="iron-flex-factors" assetpath="../bower_components/iron-flex-layout/">
+  <template>
+    <style>
+      .flex,
+      .flex-1 {
+        -ms-flex: 1 1 0.000000001px;
+        -webkit-flex: 1;
+        flex: 1;
+        -webkit-flex-basis: 0.000000001px;
+        flex-basis: 0.000000001px;
+      }
+
+      .flex-2 {
+        -ms-flex: 2;
+        -webkit-flex: 2;
+        flex: 2;
+      }
+
+      .flex-3 {
+        -ms-flex: 3;
+        -webkit-flex: 3;
+        flex: 3;
+      }
+
+      .flex-4 {
+        -ms-flex: 4;
+        -webkit-flex: 4;
+        flex: 4;
+      }
+
+      .flex-5 {
+        -ms-flex: 5;
+        -webkit-flex: 5;
+        flex: 5;
+      }
+
+      .flex-6 {
+        -ms-flex: 6;
+        -webkit-flex: 6;
+        flex: 6;
+      }
+
+      .flex-7 {
+        -ms-flex: 7;
+        -webkit-flex: 7;
+        flex: 7;
+      }
+
+      .flex-8 {
+        -ms-flex: 8;
+        -webkit-flex: 8;
+        flex: 8;
+      }
+
+      .flex-9 {
+        -ms-flex: 9;
+        -webkit-flex: 9;
+        flex: 9;
+      }
+
+      .flex-10 {
+        -ms-flex: 10;
+        -webkit-flex: 10;
+        flex: 10;
+      }
+
+      .flex-11 {
+        -ms-flex: 11;
+        -webkit-flex: 11;
+        flex: 11;
+      }
+
+      .flex-12 {
+        -ms-flex: 12;
+        -webkit-flex: 12;
+        flex: 12;
+      }
+    </style>
+  </template>
+</dom-module>
+
+
+<dom-module id="iron-positioning" assetpath="../bower_components/iron-flex-layout/">
+  <template>
+    <style>
+      .block {
+        display: block;
+      }
+
+      /* IE 10 support for HTML5 hidden attr */
+      [hidden] {
+        display: none !important;
+      }
+
+      .invisible {
+        visibility: hidden !important;
+      }
+
+      .relative {
+        position: relative;
+      }
+
+      .fit {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+      }
+
+      body.fullbleed {
+        margin: 0;
+        height: 100vh;
+      }
+
+      .scroll {
+        -webkit-overflow-scrolling: touch;
+        overflow: auto;
+      }
+
+      /* fixed position */
+      .fixed-bottom,
+      .fixed-left,
+      .fixed-right,
+      .fixed-top {
+        position: fixed;
+      }
+
+      .fixed-top {
+        top: 0;
+        left: 0;
+        right: 0;
+      }
+
+      .fixed-right {
+        top: 0;
+        right: 0;
+        bottom: 0;
+      }
+
+      .fixed-bottom {
+        right: 0;
+        bottom: 0;
+        left: 0;
+      }
+
+      .fixed-left {
+        top: 0;
+        bottom: 0;
+        left: 0;
+      }
+    </style>
+  </template>
+</dom-module>
+<iron-iconset-svg name="google" size="24">
+<svg>
+  <defs>
+    <g id="google">
+      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"></path>
+      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"></path>
+      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"></path>
+      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"></path>
+      <path fill="none" d="M1 1h22v22H1z"></path>
+    </g>
+    <g id="google-plus">
+      <path fill="none" d="M0 0h24v24H0V0z"></path>
+      <path d="M23 11h-2V9h-2v2h-2v2h2v2h2v-2h2zM8 11v2.4h3.97c-.16 1.03-1.2 3.02-3.97 3.02-2.39 0-4.34-1.98-4.34-4.42S5.61 7.58 8 7.58c1.36 0 2.27.58 2.79 1.08l1.9-1.83C11.47 5.69 9.89 5 8 5c-3.87 0-7 3.13-7 7s3.13 7 7 7c4.04 0 6.72-2.84 6.72-6.84 0-.46-.05-.81-.11-1.16H8z"></path>
+      <path fill="none" d="M1 5h14v14H1z"></path>
+    </g>
+  </defs>
+</svg>
+</iron-iconset-svg>
+<dom-module id="google-signin" assetpath="../bower_components/google-signin/">
+  
+  <template><style>
+/**
+Copyright 2014 Google Inc
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+@license
+*/:host{display:inline-block;position:relative;box-sizing:border-box;margin:0 0.29em;background:transparent;text-align:center;font:inherit;outline:none;border-radius:3px;-webkit-user-select:none;user-select:none;cursor:pointer;z-index:0;}:host([disabled]){cursor:auto;pointer-events:none;}:host([disabled]) #button{background:#eaeaea;color:#a8a8a8;}#button{position:relative;outline:none;font-size:14px;font-weight:400;font-family:'RobotoDraft','Roboto',arial,sans-serif;white-space:nowrap;border-radius:inherit;}iron-icon{width:22px;height:22px;margin:6px;}.icon{display:inline-block;vertical-align:middle;}#shadow{border-radius:inherit;}#ripple{pointer-events:none;}.button-content{outline:none;}.buttonText{display:inline-block;vertical-align:middle;padding-right:.8em;}.theme-dark{background:#da4336;color:#ffffff;border:1px solid transparent;}.theme-dark.signedIn-true.additionalAuth-false{background:#999;border:1px solid #888;}.theme-dark.signedIn-true.additionalAuth-false:hover,
+.theme-dark.signedIn-true.additionalAuth-false:focus{background:#aaa;}:host([noink]) .theme-dark:hover,
+:host([noink]) .theme-dark:focus{background:#e74b37;}:host([noink]) .theme-dark.signedIn-true.additionalAuth-false:hover,
+:host([noink]) .theme-dark.signedIn-true.additionalAuth-false:focus{background:#aaa;}.theme-light{background:#fff;color:#737373;border:1px solid #d9d9d9;}.theme-light.signedIn-true.additionalAuth-false{background:#c0c0c0;color:#fff;border:#888 1px solid;}.theme-light.signedIn-true.additionalAuth-false:hover,
+.theme-light.signedIn-true.additionalAuth-false:focus{background:#aaa;}:host([noink]) .theme-light .button-content:hover,
+:host([noink]) .theme-light:focus{border:1px solid #c0c0c0;}:host([noink]) .theme-light.signedIn-true.additionalAuth-false:hover,
+:host([noink]) .theme-light.signedIn-true.additionalAuth-false:focus{background:#aaa;}.width-iconOnly .buttonText{display:none;}.height-tall .buttonText{font-size:15px;font-weight:700;}.height-tall iron-icon{width:30px;height:30px;margin:8px;}.height-short .buttonText{font-size:11px;}.height-short iron-icon{width:16px;height:16px;margin:3px;}.brand-google.theme-dark{background:#4184F3;color:#fff;border:1px solid #3266d5;}.brand-google.theme-dark .icon{background:#fff;border-top-left-radius:2px;border-bottom-left-radius:2px;}.brand-google.theme-dark.width-iconOnly .icon{border-radius:2px;}.brand-google.theme-dark .buttonText{padding-left:.8em;}.brand-google.theme-dark #ripple{color:#1b39a8;}:host([noink]) .brand-google.theme-dark:hover,
+:host([noink]) .brand-google.theme-dark:focus{background:#e74b37;}.brand-google.theme-light .icon{color:#4184F3;}.brand-google.theme-light.signedIn-true.additionalAuth-false .icon{color:#fff;}.brand-google.theme-light #ripple{color:#444;}:host([noink]) .brand-google.theme-light:hover,
+:host([noink]) .brand-google.theme-light:focus{border:1px solid #c0c0c0;}.brand-google-plus.theme-dark{background:#da4336;color:#fff;border:1px solid transparent;}.brand-google-plus.theme-dark #ripple{color:#c43828;}.brand-google-plus.theme-light{background:#fff;color:#737373;border:1px solid #d9d9d9;}.brand-google-plus.theme-light .icon{color:#e74b37;}.brand-google-plus.theme-light.signedIn-true.additionalAuth-false .icon{color:#fff;}.brand-google-plus.theme-light #ripple{color:#400;}:host([noink]) .brand-google-plus.theme-light:hover,
+:host([noink]) .brand-google-plus.theme-light:focus{border:1px solid #c0c0c0;}
+</style>
+    <style is="custom-style" include="iron-positioning"></style>
+
+    <google-signin-aware id="aware" app-package-name="{{appPackageName}}" client-id="{{clientId}}" cookie-policy="{{cookiePolicy}}" request-visible-actions="{{requestVisibleActions}}" hosted-domain="{{hostedDomain}}" offline="{{offline}}" offline-always-prompt="{{offlineAlwaysPrompt}}" scopes="{{scopes}}" openid-prompt="{{openidPrompt}}" signed-in="{{signedIn}}" is-authorized="{{isAuthorized}}" need-additional-auth="{{needAdditionalAuth}}" has-plus-scopes="{{hasPlusScopes}}"></google-signin-aware>
+    <template is="dom-if" if="{{raised}}">
+      <paper-material id="shadow" class="fit" elevation="2" animated=""></paper-material>
+    </template>
+    <div id="button" class$="[[_computeButtonClass(height, width, theme, signedIn, _brand, needAdditionalAuth)]]">
+
+      <paper-ripple id="ripple" class="fit"></paper-ripple>
+      
+      <div>
+        <template is="dom-if" if="{{_computeButtonIsSignIn(signedIn, needAdditionalAuth)}}">
+          <div class="button-content signIn" tabindex="0" on-click="signIn" on-keydown="_signInKeyPress">
+            <span class="icon"><iron-icon icon="[[_brandIcon]]"></iron-icon></span>
+            <span class="buttonText">{{_labelSignin}}</span>
+          </div>
+        </template>
+        <template is="dom-if" if="{{_computeButtonIsSignOut(signedIn, needAdditionalAuth) }}">
+          <div class="button-content signOut" tabindex="0" on-click="signOut" on-keydown="_signOutKeyPress">
+            <span class="icon"><iron-icon icon="[[_brandIcon]]"></iron-icon></span>
+            <span class="buttonText">{{labelSignout}}</span>
+          </div>
+        </template>
+        <template is="dom-if" if="{{_computeButtonIsSignOutAddl(signedIn, needAdditionalAuth) }}">
+          <div class="button-content signIn" tabindex="0" on-click="signIn" on-keydown="_signInKeyPress">
+            <span class="icon"><iron-icon icon="[[_brandIcon]]"></iron-icon></span>
+            <span class="buttonText">{{labelAdditional}}</span>
+          </div>
+        </template>
+      </div>
+
+    </div>
+  </template>
+</dom-module>
+<script>!function(){var e={GOOGLE:"google",PLUS:"google-plus"},n={STANDARD:"Sign in",WIDE:"Sign in with Google",WIDE_PLUS:"Sign in with Google+"},t={ICON_ONLY:"iconOnly",STANDARD:"standard",WIDE:"wide"};Polymer({is:"google-signin",properties:{appPackageName:{type:String,value:""},brand:{type:String,value:""},_brand:{type:String,computed:"_computeBrand(brand, hasPlusScopes)"},clientId:{type:String,value:""},cookiePolicy:{type:String,value:""},height:{type:String,value:"standard"},fill:{type:Boolean,value:!0},labelAdditional:{type:String,value:"Additional permissions required"},labelSignin:{type:String,value:""},_labelSignin:{type:String,computed:"_computeSigninLabel(labelSignin, width, _brand)"},labelSignout:{type:String,value:"Sign out"},raised:{type:Boolean,value:!1},requestVisibleActions:{type:String,value:""},hostedDomain:{type:String,value:""},offline:{type:Boolean,value:!1},offlineAlwaysPrompt:{type:Boolean,value:!1},scopes:{type:String,value:""},openidPrompt:{type:String,value:""},theme:{type:String,value:"light"},width:{type:String,value:"standard"},_brandIcon:{type:String,computed:"_computeIcon(_brand)"},hasPlusScopes:{type:Boolean,notify:!0,value:!1},needAdditionalAuth:{type:Boolean,notify:!0,value:!1},signedIn:{type:Boolean,notify:!0,value:!1,observer:"_observeSignedIn"},isAuthorized:{type:Boolean,notify:!0,value:!1}},_computeButtonClass:function(e,n,t,i,o,u){return"height-"+e+" width-"+n+" theme-"+t+" signedIn-"+i+" brand-"+o+"  additionalAuth-"+u},_computeIcon:function(e){return"google:"+e},_computeButtonIsSignIn:function(e,n){return!e},_computeButtonIsSignOut:function(e,n){return e&&!n},_computeButtonIsSignOutAddl:function(e,n){return e&&n},_computeBrand:function(n,t){var i;return i=n?n:t?e.PLUS:e.GOOGLE},_observeSignedIn:function(e,n){e?(this.needAdditionalAuth&&this.fire("google-signin-necessary"),this.fire("google-signin-success")):this.fire("google-signed-out")},_computeSigninLabel:function(i,o,u){if(i)return i;switch(o){case t.WIDE:return u==e.PLUS?n.WIDE_PLUS:n.WIDE;case t.STANDARD:return n.STANDARD;case t.ICON_ONLY:return"";default:return console.warn("bad width value: ",o),n.STANDARD}},signIn:function(){this.$.aware.signIn()},_signInKeyPress:function(e){13!=e.which&&13!=e.keyCode&&32!=e.which&&32!=e.keyCode||(e.preventDefault(),this.signIn())},signOut:function(){this.fire("google-signout-attempted"),this.$.aware.signOut()},_signOutKeyPress:function(e){13!=e.which&&13!=e.keyCode&&32!=e.which&&32!=e.keyCode||(e.preventDefault(),this.signOut())}})}();</script>
+</div><dom-module id="my-view1">
+
+  <template>
+
+    <style>
+      :host {
+        display: block;
+        padding: 10px;
+      }
+      .card {
+        box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+        padding: 16px;
+        margin: 24px;
+        border-radius: 5px;
+        background-color: #fff;
+        color: #757575;
+      }
+      .circle {
+        display: inline-block;
+        height: 64px;
+        width: 64px;
+        border-radius: 50%;
+        background: #ddd;
+        line-height: 64px;
+        font-size: 30px;
+        color: #555;
+        text-align: center;
+      }
+      h1 {
+        font-size: 22px;
+        margin: 16px 0;
+        color: #212121;
+      }
+    </style>
+
+    <div class="card">
+    <google-signin client-id="34624700188-shojqqgimp327d2gnp0hbqt8il3hb3qt.apps.googleusercontent.com" raised="" id="google" signed-in="{{signedIn}}" scopes="profile"></google-signin>
+      <div class="circle">1</div>
+      <h1>View One</h1>
+      <p>Ut labores minimum atomorum pro. Laudem tibique ut has.
+      </p><p>Lorem ipsum dolor sit amet, per in nusquam nominavi periculis, sit elit oportere ea.Lorem ipsum dolor sit amet, per in nusquam nominavi periculis, sit elit oportere ea.Cu mei vide viris gloriatur, at populo eripuit sit.</p>
+    </div>
+
+  </template>
+
+  <script>Polymer({is:"my-view1"});</script>
+
+</dom-module>
+</body></html>
